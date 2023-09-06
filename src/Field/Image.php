@@ -133,11 +133,7 @@ class Image extends BasicField implements FieldInterface
      */
     protected function fetchMetadataValue(Post $attachment)
     {
-        $meta = PostMeta::where('post_id', $attachment->ID)
-                        ->where('meta_key', '_wp_attachment_metadata')
-                        ->first();
-
-        return unserialize($meta->meta_value);
+        return unserialize($attachment->meta->where('meta_key', '_wp_attachment_metadata')->first()->meta_value);
     }
 
     /**
