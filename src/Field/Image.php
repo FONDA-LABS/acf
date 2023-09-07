@@ -143,15 +143,12 @@ class Image extends BasicField implements FieldInterface
      */
     protected function fetchMultipleMetadataValues(Collection $attachments)
     {
-        $ids = $attachments->pluck('ID')->toArray();
         $metadataValues = [];
 
-        $metaRows = PostMeta::whereIn("post_id", $ids)
-            ->where('meta_key', '_wp_attachment_metadata')
-            ->get();
-            
-        foreach ($metaRows as $meta) {
-            $metadataValues[$meta->post_id] = unserialize($meta->meta_value);
+        foreach($attachments as $attachment){
+            $metadataValues[$attachment->ID] = unserialize(
+                $attachment->meta->where('meta_key', '_wp_attachment_metadata')->first()->meta_value
+            );
         }
 
         return $metadataValues;
