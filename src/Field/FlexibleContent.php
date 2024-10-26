@@ -99,8 +99,25 @@ class FlexibleContent extends BasicField implements FieldInterface
             $post = $this->post->ID != $meta->post_id ? $this->post->find($meta->post_id) : $this->post;
             $field = FieldFactory::make($meta->meta_key, $post);
 
-            if ($field === null || !array_key_exists($id, $blocks)) {
+            if (!array_key_exists($id, $blocks)) {
                 continue;
+            }
+
+            if ($field === null) {
+                $acfFieldType = $this->getFieldTypeByFieldName($name);
+
+                if ($acfFieldType === null) {
+                    $acfFieldType = $this->getFieldTypeByLayoutName($blocks[$id]);
+
+                    if ($acfFieldType === null) {
+                        continue;
+                    }
+                }
+
+                $field = FieldFactory::make($meta->meta_key, $post, $acfFieldType);
+                if ($field === null) {
+                    continue;
+                }
             }
 
             if (empty($fields[$id])) {
@@ -115,5 +132,63 @@ class FlexibleContent extends BasicField implements FieldInterface
         ksort($fields);
 
         return $fields;
+    }
+
+    protected function getFieldTypeByFieldName(string $fieldName): ?string
+    {
+        switch ($fieldName) {
+            case 'html_content':
+            case 'text_content':
+            case 'headline':
+            case 'videoId':
+            case 'channelId':
+                $acfFieldType = 'text';
+                break;
+            case 'display_type':
+            case 'alignment':
+            case 'newsletter_list':
+                $acfFieldType = 'select';
+                break;
+            case 'image_gallery':
+                $acfFieldType = 'gallery';
+                break;
+            case 'image':
+                $acfFieldType = 'image';
+                break;
+            case 'location_repeater':
+            case 'products_repeater':
+            case 'fact_repeater':
+                $acfFieldType = 'repeater';
+                break;
+            case 'acf_hide_layout':
+            case 'autoplay':
+                $acfFieldType = 'boolean';
+                break;
+            default:
+                $acfFieldType = null;
+                break;
+        }
+
+        return $acfFieldType;
+    }
+
+    protected function getFieldTypeByLayoutName($fieldType): ?string
+    {
+        switch ($fieldType) {
+            case 'text_editor':
+            case 'html_editor':
+            case 'newsletter_section':
+                $acfFieldType = 'text';
+                break;
+            case 'competition':
+            case 'magazine_selection':
+                $acfFieldType = 'post_object';
+                break;
+            default:
+                $acfFieldType = null;
+                break;
+        }
+
+        return $acfFieldType;
     }
 }
