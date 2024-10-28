@@ -75,7 +75,7 @@ class Repeater extends BasicField implements FieldInterface
     protected function fetchPostsMeta($fieldName, $post)
     {
         $count = (int) $this->fetchValue($fieldName);
-        
+
         if ($this->postMeta instanceof \Corcel\Model\Meta\TermMeta) {
             $builder = $this->postMeta->where('term_id', $post->term_id);
         } else {
@@ -107,13 +107,41 @@ class Repeater extends BasicField implements FieldInterface
             $post = $this->post->ID != $meta->post_id ? $this->post->find($meta->post_id) : $this->post;
             $field = FieldFactory::make($meta->meta_key, $post);
 
-            if ($field == null) {
-                continue;
+            if ($field === null) {
+                $acfFieldType = $this->getFieldTypeByFieldName($name);
+
+                if ($acfFieldType === null) {
+                    continue;
+                }
+
+                $field = FieldFactory::make($meta->meta_key, $post, $acfFieldType);
+                if ($field === null) {
+                    continue;
+                }
             }
 
             $fields[$id][$name] = $field->get();
         }
 
         return $fields;
+    }
+
+    protected function getFieldTypeByFieldName(string $fieldName): ?string
+    {
+        switch ($fieldName) {
+            case 'fact_headline':
+            case 'fact_text':
+                $acfFieldType = 'text';
+                break;
+            case 'location_single':
+            case 'product_single':
+                $acfFieldType = 'select';
+                break;
+            default:
+                $acfFieldType = null;
+                break;
+        }
+
+        return $acfFieldType;
     }
 }
