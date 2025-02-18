@@ -129,6 +129,10 @@ abstract class BasicField
      */
     public function fetchFieldType($fieldKey)
     {
+        if (config('corcel.acf.field_type_driver', 'database') === 'file') {
+            return $this->getFieldTypeFromFile($fieldKey);
+        }
+
         $post = Post::on($this->post->getConnectionName())
                    ->orWhere(function ($query) use ($fieldKey) {
                        $query->where('post_name', $fieldKey);
@@ -168,5 +172,21 @@ abstract class BasicField
     public function __toString()
     {
         return $this->get();
+    }
+
+    private function getFieldTypeFromFile(string $fieldKey)
+    {
+        $fieldType = null;
+        $file = config('corcel.acf.field_type_definition_file');
+        if (file_exists($file)) {
+            @$fields = include $file;
+            if (!is_array($fields)) {
+                return null;
+            }
+
+            $fieldType = collect($fields)->firstWhere('key', $fieldKey)['type'] ?? null;
+        }
+
+        return $fieldType;
     }
 }
