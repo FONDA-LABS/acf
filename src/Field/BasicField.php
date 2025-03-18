@@ -185,6 +185,29 @@ abstract class BasicField
             }
 
             $fieldType = collect($fields)->firstWhere('key', $fieldKey)['type'] ?? null;
+            if (!$fieldType) {
+                foreach($fields as $field) {
+                    if (isset($field['sub_fields']) && is_array($field['sub_fields'])) {
+                        foreach($field['sub_fields'] as $subField) {
+                            if (isset($subField['key']) && $subField['key'] === $fieldKey) {
+                                return $subField['type'];
+                            }
+                        };
+                    }
+
+                    if (isset($field['layouts']) && is_array($field['layouts'])) {
+                        foreach ($field['layouts'] as $layout) {
+                            if (isset($layout['sub_fields']) && is_array($layout['sub_fields'])) {
+                                foreach($layout['sub_fields'] as $subField) {
+                                    if (isset($subField['key']) && $subField['key'] === $fieldKey) {
+                                        return $subField['type'];
+                                    }
+                                };
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return $fieldType;
