@@ -129,11 +129,15 @@ abstract class BasicField
      */
     public function fetchFieldType($fieldKey)
     {
+        if (config('corcel.acf.field_type_driver', 'database') === 'file') {
+            return $this->getFieldTypeFromFile($fieldKey);
+        }
+
         $post = Post::on($this->post->getConnectionName())
-                   ->orWhere(function ($query) use ($fieldKey) {
-                       $query->where('post_name', $fieldKey);
-                       $query->where('post_type', 'acf-field');
-                   })->first();
+            ->orWhere(function ($query) use ($fieldKey) {
+                $query->where('post_name', $fieldKey);
+                $query->where('post_type', 'acf-field');
+            })->first();
 
         if ($post) {
             $fieldData = unserialize($post->post_content);
@@ -168,5 +172,50 @@ abstract class BasicField
     public function __toString()
     {
         return $this->get();
+    }
+
+    private function getFieldTypeFromFile(string $fieldKey)
+    {
+        $fieldType = null;
+        $file = config('corcel.acf.field_type_definition_file');
+        if (!file_exists($file)) {
+            return null;
+        }
+
+        @$fields = include $file;
+        if (!is_array($fields)) {
+            return null;
+        }
+
+        return $this->getFieldTypeRecursively($fields, $fieldKey);
+    }
+
+    private function getFieldTypeRecursively($fields, $fieldKey)
+    {
+        foreach($fields as $field) {
+            if (isset($field['key']) && $field['key'] === $fieldKey) {
+                return $field['type'];
+            }
+
+            if (isset($field['sub_fields']) && is_array($field['sub_fields'])) {
+                $subField = $this->getFieldTypeRecursively($field['sub_fields'], $fieldKey);
+                if ($subField) {
+                    return $subField;
+                }
+            }
+
+            if (isset($field['layouts']) && is_array($field['layouts'])) {
+                foreach ($field['layouts'] as $layout) {
+                    if (isset($layout['sub_fields']) && is_array($layout['sub_fields'])) {
+                        $subField = $this->getFieldTypeRecursively($layout['sub_fields'], $fieldKey);
+                        if ($subField) {
+                            return $subField;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }
