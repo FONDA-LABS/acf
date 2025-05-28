@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5a903ff1ad07d2d363a91b9198245604",
+    "content-hash": "5388d1b4caf3c6f4dcebe28b4127a9a3",
     "packages": [
         {
             "name": "bordoni/phpass",
