@@ -88,7 +88,9 @@ abstract class BasicField
 
         if (isset($postMeta->meta_value) and ! is_null($postMeta->meta_value)) {
             $value = $postMeta->meta_value;
-            if ($array = @unserialize($value) and is_array($array)) {
+            $array = $this->unserializeArray($value);
+
+            if ($array !== null) {
                 $this->value = $array;
 
                 return $array;
@@ -98,6 +100,24 @@ abstract class BasicField
                 return $value;
             }
         }
+    }
+
+    /**
+     * Unserialize array values, including serialized empty arrays.
+     *
+     * @param mixed $value
+     *
+     * @return array|null
+     */
+    protected function unserializeArray($value)
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $array = @unserialize($value, ['allowed_classes' => false]);
+
+        return is_array($array) ? $array : null;
     }
 
     /**
