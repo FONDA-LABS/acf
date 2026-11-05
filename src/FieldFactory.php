@@ -54,6 +54,8 @@ class FieldFactory
             case 'text':
             case 'textarea':
             case 'number':
+            case 'range':
+            case 'streamdiver_search':
             case 'email':
             case 'url':
             case 'link':
